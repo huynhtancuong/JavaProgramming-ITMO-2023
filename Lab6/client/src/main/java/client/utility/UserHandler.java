@@ -5,7 +5,7 @@ import common.data.*;
 import common.exceptions.CommandUsageException;
 import common.exceptions.IncorrectInputInScriptException;
 import common.exceptions.ScriptRecursionException;
-import common.interaction.TicketRaw;
+import common.interaction.MarineRaw;
 import common.interaction.Request;
 import common.interaction.ResponseCode;
 import common.utility.Outputer;
@@ -81,10 +81,10 @@ public class UserHandler {
                     throw new IncorrectInputInScriptException();
                 switch (processingCode) {
                     case OBJECT:
-                        TicketRaw ticketAddRaw = generateTicketAdd();
+                        MarineRaw ticketAddRaw = generateTicketAdd();
                         return new Request(userCommand[0], userCommand[1], ticketAddRaw);
                     case UPDATE_OBJECT:
-                        TicketRaw ticketUpdateRaw = generateTicketUpdate();
+                        MarineRaw ticketUpdateRaw = generateMarineUpdate();
                         return new Request(userCommand[0], userCommand[1], ticketUpdateRaw);
                     case SCRIPT:
                         File scriptFile = new File(userCommand[1]);
@@ -146,13 +146,15 @@ public class UserHandler {
                 case "clear":
                     if (!commandArgument.isEmpty()) throw new CommandUsageException();
                     break;
-
                 case "execute_script":
                     if (commandArgument.isEmpty()) throw new CommandUsageException("<file_name>");
                     return ProcessingCode.SCRIPT;
                 case "exit":
                     if (!commandArgument.isEmpty()) throw new CommandUsageException();
                     break;
+                case "add_if_max":
+                    if (!commandArgument.isEmpty()) throw new CommandUsageException("{element}");
+                    return ProcessingCode.OBJECT;
                 case "add_if_min":
                     if (!commandArgument.isEmpty()) throw new CommandUsageException("{element}");
                     return ProcessingCode.OBJECT;
@@ -162,14 +164,20 @@ public class UserHandler {
                 case "history":
                     if (!commandArgument.isEmpty()) throw new CommandUsageException();
                     break;
-                case "remove_lower":
-                    if (!commandArgument.isEmpty()) throw new CommandUsageException();
+                case "sum_of_health":
+                    if(!commandArgument.isEmpty()) throw new CommandUsageException();
                     break;
-                case "min_by_price":
-                    if (!commandArgument.isEmpty()) throw new CommandUsageException();
+                case "count_greater_than_loyal":
+                    if(!commandArgument.isEmpty()) throw new CommandUsageException();
                     break;
-                case "filter_by_price":
-                    if (commandArgument.isEmpty()) throw new CommandUsageException("<price>");
+                case "group_counting_by_melee_weapon":
+                    if(!commandArgument.isEmpty()) throw new CommandUsageException();
+                    break;
+                case "max_by_height":
+                    if(!commandArgument.isEmpty()) throw new CommandUsageException();
+                    break;
+                case "max_by_melee_weapon":
+                    if(!commandArgument.isEmpty()) throw new CommandUsageException();
                     break;
                 case "server_exit":
                     if (!commandArgument.isEmpty()) throw new CommandUsageException();
@@ -192,15 +200,17 @@ public class UserHandler {
      * @return Ticket to add.
      * @throws IncorrectInputInScriptException When something went wrong in script.
      */
-    private TicketRaw generateTicketAdd() throws IncorrectInputInScriptException {
-        TicketAsker ticketAsker = new TicketAsker(userScanner);
-        if (fileMode()) ticketAsker.setFileMode();
-        return new TicketRaw(
-                ticketAsker.askName(),
-                ticketAsker.askCoordinates(),
-                ticketAsker.askPrice(),
-                ticketAsker.askTicketType(),
-                ticketAsker.askPerson(false)
+    private MarineRaw generateTicketAdd() throws IncorrectInputInScriptException {
+        MarineAsker marineAsker = new MarineAsker(userScanner);
+        if (fileMode()) marineAsker.setFileMode();
+        return new MarineRaw(
+                marineAsker.askName(),
+                marineAsker.askCoordinates(),
+                marineAsker.askHealth(),
+                marineAsker.askMeleeWeapon(),
+                marineAsker.askChapter(),
+                marineAsker.askLoyal(),
+                marineAsker.askHeight()
         );
     }
 
@@ -210,25 +220,32 @@ public class UserHandler {
      * @return Ticket to update.
      * @throws IncorrectInputInScriptException When something went wrong in script.
      */
-    private TicketRaw generateTicketUpdate() throws IncorrectInputInScriptException {
-        TicketAsker ticketAsker = new TicketAsker(userScanner);
-        if (fileMode()) ticketAsker.setFileMode();
-        String name = ticketAsker.askQuestion("Do you want to change name?") ?
-                ticketAsker.askName() : null;
-        Coordinates coordinates = ticketAsker.askQuestion("Do you want to change coordinate?") ?
-                ticketAsker.askCoordinates() : null;
-        Long price = ticketAsker.askQuestion("Do you want to change price?") ?
-                ticketAsker.askPrice() : -1;
-        TicketType type = ticketAsker.askQuestion("Do you want to change ticket type?") ?
-                ticketAsker.askTicketType() : null;
-        Person person = ticketAsker.askQuestion("Do you want to change person?") ?
-                ticketAsker.askPerson(false) : null;
-        return new TicketRaw(
+    private MarineRaw generateMarineUpdate() throws IncorrectInputInScriptException {
+        MarineAsker marineAsker = new MarineAsker(userScanner);
+        if (fileMode()) marineAsker.setFileMode();
+        String name = marineAsker.askQuestion("Do you want to change name?") ?
+                marineAsker.askName() : null;
+        Coordinates coordinates = marineAsker.askQuestion("Do you want to change coordinate?") ?
+                marineAsker.askCoordinates() : null;
+        double health = marineAsker.askQuestion("Do you want to change health?") ?
+                marineAsker.askHealth() : -1;
+        MeleeWeapon meleeWeapon = marineAsker.askQuestion("Do you want to change Melee Weapon?") ?
+                marineAsker.askMeleeWeapon() : null;
+        Chapter chapter = marineAsker.askQuestion("Do you want to change Chapter?") ?
+                marineAsker.askChapter() : null;
+        Boolean loyal = marineAsker.askQuestion("Loyal?") ?
+                marineAsker.askLoyal() : null;
+        float height = marineAsker.askQuestion("Height?") ?
+                marineAsker.askHeight() : -1;
+
+        return new MarineRaw(
                 name,
                 coordinates,
-                price,
-                type,
-                person
+                health,
+                meleeWeapon,
+                chapter,
+                loyal,
+                height
         );
     }
 
