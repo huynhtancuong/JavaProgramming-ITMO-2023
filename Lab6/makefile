@@ -31,7 +31,8 @@ env-var:
 	export $(env_var_name)=$(shell pwd)/$(env_var_value)
 
 server: target
-	echo "Main-class: $(server_entry) \nClass-Path: target/ $(_path_libs) \n" > $(manifest) 
+	echo "Main-class: $(server_entry)" > $(manifest)
+	echo "Class-Path: target/ $(_path_libs)" >> $(manifest)
 	jar -cvfm $(out_server) $(manifest) target/common target/server $(_path_libs)
 
 run-server: $(out_server) 
@@ -43,7 +44,8 @@ run-client: $(out_client)
 	java -jar $(out_client)	$(server_ip) $(server_port)
 
 client: target
-	echo "Main-class: $(client_entry) \nClass-Path: target/ $(_path_libs) \n" > $(manifest) 
+	echo "Main-class: $(client_entry)" > $(manifest)
+	echo "Class-Path: target/ $(_path_libs)" >> $(manifest)
 	jar -cvfm $(out_client) $(manifest) target/client target/common $(_path_libs)
 clean:
 	# -f flag here to make sure rm won't complain if file doesn't exist
