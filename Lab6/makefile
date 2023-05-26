@@ -4,9 +4,9 @@ out_server := server.jar
 out_client := client.jar
 out_sourceslist := sourceslist.txt
 env_var_name := HEHE
-env_var_value := data.csv
-server_ip := 127.0.0.1
-server_port := 1821
+env_var_value := spacemarine_data.xml
+server_ip := localhost
+server_port := 1069
 server_entry := server.App
 client_entry := client.App
 manifest := MANIFEST.MF
@@ -15,7 +15,7 @@ manifest := MANIFEST.MF
 # the separator between paths is SPACE
 _path_libs += $(shell find lib -name "*.jar") 
 # path to resource 
-_path_libs := $(_path_libs)server/src/main/resources/
+_path_libs := $(_path_libs)server/src/server/resources/
 
 # path_libs is a variable that store path to all jar file in folder lib
 # the separator between paths is COLON

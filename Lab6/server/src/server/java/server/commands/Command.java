@@ -18,7 +18,7 @@ public interface Command {
     String getName();
 
     /**
-     * @param argument argument of the command
+     * @param stringArgument argument of the command
      * @return exit status of command
      */
     boolean execute(String stringArgument, Object commandObjectArgument);
