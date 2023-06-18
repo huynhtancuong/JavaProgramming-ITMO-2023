@@ -31,7 +31,7 @@ public class FileManager {
                 XStream xstream = new XStream();
                 String xml = xstream.toXML(collection);
                 collectionFileWriter.write(xml);
-                ResponseOutputer.appenderror("Коллекция успешна сохранена в файл!");
+                ResponseOutputer.appendln("Коллекция успешна сохранена в файл!");
             } catch (IOException exception) {
                 ResponseOutputer.appenderror("Загрузочный файл является директорией/не может быть открыт!");
             }

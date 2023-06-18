@@ -46,6 +46,7 @@ public class Server {
                 Response responseToUser = null;
                 try {
                     responseToUser = read();
+
                 }
                 catch (StreamCorruptedException | ClassNotFoundException e) {
                     Outputer.printerror("An error occurred while reading received data!");
@@ -61,6 +62,9 @@ public class Server {
                 try {
                     if (responseToUser != null) {
                         write(responseToUser);
+                        if (responseToUser.getResponseCode() == ResponseCode.SERVER_EXIT) {
+                            stop();
+                        }
                     }
                 } catch (StreamCorruptedException | NullPointerException e) {
 
@@ -109,8 +113,6 @@ public class Server {
             userRequest = (Request) obj;
             responseToUser = requestHandler.handle(userRequest);
             App.logger.info("Request '" + userRequest.getCommandName() + "' successfully processed.");
-//            if (responseToUser.getResponseCode() == ResponseCode.SERVER_EXIT)
-//                System.exit(0);
 
         }
         return responseToUser;
@@ -138,6 +140,7 @@ public class Server {
 //            serverSocketChannel.close();
             if (datagramChannel == null) throw new ClosingSocketException();
             datagramChannel.close();
+
             Outputer.println("Server completed successfully.");
             App.logger.info("Server completed successfully.");
             System.exit(0);
