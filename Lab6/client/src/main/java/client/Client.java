@@ -10,7 +10,9 @@ import common.utility.Outputer;
 
 import java.io.*;
 import java.net.InetSocketAddress;
+import java.net.ProtocolFamily;
 import java.nio.ByteBuffer;
+import java.nio.channels.DatagramChannel;
 import java.nio.channels.SocketChannel;
 
 /**
@@ -23,7 +25,8 @@ public class Client {
     private int reconnectionAttempts;
     private int maxReconnectionAttempts;
     private UserHandler userHandler;
-    private SocketChannel socketChannel;
+//    private SocketChannel socketChannel;
+    private DatagramChannel datagramChannel;
     private ObjectOutputStream serverWriter;
     private ObjectInputStream serverReader;
 
@@ -63,7 +66,7 @@ public class Client {
                 }
                 reconnectionAttempts++;
             }
-            if (socketChannel != null) socketChannel.close();
+            if (datagramChannel != null) datagramChannel.close();
             Outputer.println("Client job completed successfully.");
         } catch (NotInDeclaredLimitsException exception) {
             Outputer.printerror("Client cannot be started!");
@@ -78,8 +81,11 @@ public class Client {
     private void connectToServer() throws ConnectionErrorException, NotInDeclaredLimitsException {
         try {
             if (reconnectionAttempts >= 1) Outputer.println("Reconnecting to the server...");
-            socketChannel = SocketChannel.open(new InetSocketAddress(host, port));
-            if (socketChannel != null) {
+            // datagramChannel = DatagramChannel.open( new InetSocketAddress(host, port));
+            datagramChannel = DatagramChannel.open();
+            datagramChannel.connect(new InetSocketAddress(host, port));
+            
+            if (datagramChannel != null) {
                 Outputer.println("Connected to server.");
             } else {
                 Outputer.println("Reconnecting to the server.");
@@ -147,7 +153,7 @@ public class Client {
         ByteBuffer buffer = ByteBuffer.allocate(1024*16);
         buffer.clear();
 
-        int read = socketChannel.read(buffer);
+        int read = datagramChannel.read(buffer);
         if (read < 0) return serverResponse;
 
         buffer.flip();
@@ -171,6 +177,6 @@ public class Client {
         serverWriter.writeObject(requestToServer);
 
         ByteBuffer buffer = ByteBuffer.wrap(byteArrayOutputStream.toByteArray());
-        socketChannel.write(buffer);
+        datagramChannel.write(buffer);
     }
 }

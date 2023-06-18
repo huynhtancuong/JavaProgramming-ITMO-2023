@@ -10,11 +10,9 @@ import server.utility.RequestHandler;
 
 import java.io.*;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -27,8 +25,8 @@ public class Server {
     private final RequestHandler requestHandler;
     // NonBlocking IO
     private Selector selector;
-    private ServerSocketChannel serverSocketChannel;
-
+//    private ServerSocketChannel serverSocketChannel;
+    private DatagramChannel datagramChannel;
     private Request userRequest = null;
      private Response responseToUser = null;
 
@@ -109,30 +107,37 @@ public class Server {
     }
 
     private void accept(SelectionKey key, Selector selector) throws IOException {
-        serverSocketChannel = (ServerSocketChannel) key.channel();
+//        serverSocketChannel = (ServerSocketChannel) key.channel();
+        datagramChannel = (DatagramChannel) key.channel();
         // Get client socket channel
         Outputer.println("Port listening '" + port + "'...");
         App.logger.info("Port listening '" + port + "'...");
 
-        SocketChannel clientSocket = serverSocketChannel.accept();
+//        SocketChannel clientSocket = serverSocketChannel.accept();
 
         Outputer.println("Client connection successfully established.");
         App.logger.info("Client connection successfully established.");
         // Non blocking I/O
-        clientSocket.configureBlocking(false);
+//        clientSocket.configureBlocking(false);
+        datagramChannel.configureBlocking(false);
         // Record it for read/write operations (only read here)
-        clientSocket.register(selector, SelectionKey.OP_READ, ByteBuffer.allocate(1024));
+//        clientSocket.register(selector, SelectionKey.OP_READ, ByteBuffer.allocate(1024));
+        datagramChannel.register(selector, SelectionKey.OP_READ, ByteBuffer.allocate(1024));
     }
 
 
     private void read(SelectionKey key) throws IOException, ClassNotFoundException {
-        SocketChannel clientSocket = (SocketChannel) key.channel();
-        clientSocket.configureBlocking(false);
-        clientSocket.register(key.selector(), SelectionKey.OP_WRITE);
+//        SocketChannel clientSocket = (SocketChannel) key.channel();
+//        clientSocket.configureBlocking(false);
+//        clientSocket.register(key.selector(), SelectionKey.OP_WRITE);
+
+        datagramChannel = (DatagramChannel) key.channel();
+        datagramChannel.configureBlocking(false);
+        datagramChannel.register(key.selector(), SelectionKey.OP_WRITE);
 
         ByteBuffer buffer = ByteBuffer.allocate(1024*16);
 
-        int readStatus = clientSocket.read(buffer);
+        int readStatus = datagramChannel.read(buffer);
         if (readStatus == -1) {
             key.cancel(); // Cancel the key when there are nothing to read
             return;
@@ -157,9 +162,13 @@ public class Server {
     }
 
     private void write(SelectionKey key, Response responseToUser) throws IOException {
-        SocketChannel clientSocket = (SocketChannel) key.channel();
-        clientSocket.configureBlocking(false);
-        clientSocket.register(key.selector(), SelectionKey.OP_READ);
+//        SocketChannel clientSocket = (SocketChannel) key.channel();
+//        clientSocket.configureBlocking(false);
+//        clientSocket.register(key.selector(), SelectionKey.OP_READ);
+
+        datagramChannel = (DatagramChannel) key.channel();
+        datagramChannel.configureBlocking(false);
+        datagramChannel.register(key.selector(), SelectionKey.OP_READ);
 
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         ObjectOutputStream clientWriter = new ObjectOutputStream(byteArrayOutputStream);
@@ -170,7 +179,7 @@ public class Server {
         ByteBuffer buffer = ByteBuffer.wrap(byteArrayOutputStream.toByteArray());
         int totalWrite = 0;
         while (totalWrite < buffer.capacity()) {
-            int writeStatus = clientSocket.write(buffer);
+            int writeStatus = datagramChannel.write(buffer);
             totalWrite+=writeStatus;
         }
     }
@@ -181,8 +190,10 @@ public class Server {
     private void stop() {
         try {
             App.logger.info("Shutting down the server...");
-            if (serverSocketChannel == null) throw new ClosingSocketException();
-            serverSocketChannel.close();
+//            if (serverSocketChannel == null) throw new ClosingSocketException();
+//            serverSocketChannel.close();
+            if (datagramChannel == null) throw new ClosingSocketException();
+            datagramChannel.close();
             Outputer.println("Server completed successfully.");
             App.logger.info("Server completed successfully.");
             System.exit(0);
@@ -205,15 +216,21 @@ public class Server {
 //            serverSocket.setSoTimeout(soTimeout);
             selector = Selector.open();
 
-            serverSocketChannel = ServerSocketChannel.open();
-            serverSocketChannel.configureBlocking(false);
+//            serverSocketChannel = ServerSocketChannel.open();
+//            serverSocketChannel.configureBlocking(false);
+            datagramChannel = DatagramChannel.open();
+            datagramChannel.configureBlocking(false);
 
-            serverSocketChannel.bind(new InetSocketAddress(port));
-            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+//            serverSocketChannel.bind(new InetSocketAddress(port));
+//            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+
+            datagramChannel.bind(new InetSocketAddress(port));
+//            datagramChannel.register(selector, SelectionKey.OP_ACCEPT);
 
             App.logger.info("Server started successfully.");
         } catch (IllegalArgumentException exception) {
             Outputer.printerror("Port '" + port + "' is out of range!");
+            Outputer.printerror(exception.toString());
             App.logger.error("Port '" + port + "' is out of range!");
             throw new OpeningServerSocketException();
         } catch (IOException exception) {
@@ -221,6 +238,15 @@ public class Server {
             App.logger.error("An error occurred while trying to use the port '" + port + "'!");
             throw new OpeningServerSocketException();
         }
+    }
+
+    public static DatagramChannel openChannel() throws IOException {
+        DatagramChannel datagramChannel = DatagramChannel.open();
+        return datagramChannel;
+    }
+
+    public static DatagramChannel bindChannel(SocketAddress local) throws IOException {
+        return openChannel().bind(local);
     }
 
 
