@@ -24,11 +24,10 @@ public class Server {
 
     private final RequestHandler requestHandler;
     // NonBlocking IO
-    private Selector selector;
-//    private ServerSocketChannel serverSocketChannel;
     private DatagramChannel datagramChannel;
+    private SocketAddress addr;
     private Request userRequest = null;
-     private Response responseToUser = null;
+//     private Response responseToUser = null;
 
     public Server(int port, int soTimeout, RequestHandler requestHandler) {
         this.port = port;
@@ -44,55 +43,37 @@ public class Server {
             openServerSocket();
             boolean processingStatus = true;
             while (processingStatus) {
-                int readyCount = selector.select();
-                if (readyCount == 0) continue; // if there is no client connection so continue to the next loop
-                // process selected keys
-                Set<SelectionKey> readyKeys = selector.selectedKeys();
-                Iterator keys = readyKeys.iterator();
-                while (keys.hasNext()) {
-                    SelectionKey key = (SelectionKey) keys.next();
-                    // Remove key from set, so we don't process it twice
-                    keys.remove();
-                    // Operate on the channel
-                    if (key.isValid()) {
+                Response responseToUser = null;
+                try {
+                    responseToUser = read();
+                }
+                catch (StreamCorruptedException | ClassNotFoundException e) {
+                    Outputer.printerror("An error occurred while reading received data!");
+                    App.logger.error("An error occurred while reading received data!");
+                } catch (InvalidClassException | NotSerializableException exception) {
+                    Outputer.printerror("An error occurred while reading received data!");
+                    App.logger.error("An error occurred while reading received data!");
+                } catch (IOException exception) {
+                    Outputer.printerror("An error occurred while trying to terminate the connection with the client!");
+                    App.logger.error("An error occurred while trying to terminate the connection with the client!");
+                }
 
-                        if (key.isAcceptable()) {
-                            accept(key, selector);
+                try {
+                    if (responseToUser != null) {
+                        write(responseToUser);
+                    }
+                } catch (StreamCorruptedException | NullPointerException e) {
 
-                        } else if (key.isReadable()) {
-                            try {
-                                read(key);
-                            }
-                            catch (StreamCorruptedException | ClassNotFoundException e) {
-                                Outputer.printerror("An error occurred while reading received data!");
-                                App.logger.error("An error occurred while reading received data!");
-                            } catch (InvalidClassException | NotSerializableException exception) {
-                                Outputer.printerror("An error occurred while reading received data!");
-                                App.logger.error("An error occurred while reading received data!");
-                            } catch (IOException exception) {
-                                Outputer.printerror("An error occurred while trying to terminate the connection with the client!");
-                                App.logger.error("An error occurred while trying to terminate the connection with the client!");
-                            }
-
-                        }
-                        else if (key.isWritable()) {
-                            try {
-                                write(key, responseToUser);
-                            } catch (StreamCorruptedException e) {
-
-                            } catch (InvalidClassException | NotSerializableException exception) {
-                                Outputer.printerror("An error occurred while sending data to the client!");
-                                App.logger.error("An error occurred while sending data to the client!");
-                            } catch (IOException exception) {
-                                if (userRequest == null) {
-                                    Outputer.printerror("Unexpected loss of connection with the client!");
-                                    App.logger.warn("Unexpected loss of connection with the client!");
-                                } else {
-                                    Outputer.println("Client successfully disconnected from server!");
-                                    App.logger.info("Client successfully disconnected from server!");
-                                }
-                            }
-                        }
+                } catch (InvalidClassException | NotSerializableException exception) {
+                    Outputer.printerror("An error occurred while sending data to the client!");
+                    App.logger.error("An error occurred while sending data to the client!");
+                } catch (IOException exception) {
+                    if (userRequest == null) {
+                        Outputer.printerror("Unexpected loss of connection with the client!");
+                        App.logger.warn("Unexpected loss of connection with the client!");
+                    } else {
+                        Outputer.println("Client successfully disconnected from server!");
+                        App.logger.info("Client successfully disconnected from server!");
                     }
                 }
             }
@@ -100,76 +81,42 @@ public class Server {
         } catch (OpeningServerSocketException exception) {
             Outputer.printerror("Server cannot be started!");
             App.logger.error("Server cannot be started!");
-        } catch (IOException e) {
-            Outputer.printerror("An error occurred while trying to terminate the connection with the client!");
-            App.logger.error("An error occurred while trying to terminate the connection with the client!");
         }
     }
 
-    private void accept(SelectionKey key, Selector selector) throws IOException {
-//        serverSocketChannel = (ServerSocketChannel) key.channel();
-        datagramChannel = (DatagramChannel) key.channel();
-        // Get client socket channel
-        Outputer.println("Port listening '" + port + "'...");
-        App.logger.info("Port listening '" + port + "'...");
 
-//        SocketChannel clientSocket = serverSocketChannel.accept();
-
-        Outputer.println("Client connection successfully established.");
-        App.logger.info("Client connection successfully established.");
-        // Non blocking I/O
-//        clientSocket.configureBlocking(false);
-        datagramChannel.configureBlocking(false);
-        // Record it for read/write operations (only read here)
-//        clientSocket.register(selector, SelectionKey.OP_READ, ByteBuffer.allocate(1024));
-        datagramChannel.register(selector, SelectionKey.OP_READ, ByteBuffer.allocate(1024));
-    }
-
-
-    private void read(SelectionKey key) throws IOException, ClassNotFoundException {
-//        SocketChannel clientSocket = (SocketChannel) key.channel();
-//        clientSocket.configureBlocking(false);
-//        clientSocket.register(key.selector(), SelectionKey.OP_WRITE);
-
-        datagramChannel = (DatagramChannel) key.channel();
-        datagramChannel.configureBlocking(false);
-        datagramChannel.register(key.selector(), SelectionKey.OP_WRITE);
+    private Response read() throws IOException, ClassNotFoundException {
 
         ByteBuffer buffer = ByteBuffer.allocate(1024*16);
 
-        int readStatus = datagramChannel.read(buffer);
-        if (readStatus == -1) {
-            key.cancel(); // Cancel the key when there are nothing to read
-            return;
-        }
+        addr = datagramChannel.receive(buffer);
 
         Object obj = null;
 
-        if (readStatus != -1) {
-            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buffer.array());
-            ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
+        if (addr != null) {
+            try {
+                ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buffer.array());
+                ObjectInputStream objectInputStream = new ObjectInputStream(byteArrayInputStream);
 
-            obj = objectInputStream.readObject();
+                obj = objectInputStream.readObject();
+            } catch (Exception e) {
+            App.logger.error("An error had occurred.");
+            }
         }
 
+        Response responseToUser = null;
         if (obj instanceof Request) {
             userRequest = (Request) obj;
             responseToUser = requestHandler.handle(userRequest);
             App.logger.info("Request '" + userRequest.getCommandName() + "' successfully processed.");
-            if (responseToUser.getResponseCode() == ResponseCode.SERVER_EXIT)
-                System.exit(0);
+//            if (responseToUser.getResponseCode() == ResponseCode.SERVER_EXIT)
+//                System.exit(0);
+
         }
+        return responseToUser;
     }
 
-    private void write(SelectionKey key, Response responseToUser) throws IOException {
-//        SocketChannel clientSocket = (SocketChannel) key.channel();
-//        clientSocket.configureBlocking(false);
-//        clientSocket.register(key.selector(), SelectionKey.OP_READ);
-
-        datagramChannel = (DatagramChannel) key.channel();
-        datagramChannel.configureBlocking(false);
-        datagramChannel.register(key.selector(), SelectionKey.OP_READ);
-
+    private void write(Response responseToUser) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         ObjectOutputStream clientWriter = new ObjectOutputStream(byteArrayOutputStream);
         clientWriter.flush();
@@ -177,11 +124,8 @@ public class Server {
         clientWriter.writeObject(responseToUser);
 
         ByteBuffer buffer = ByteBuffer.wrap(byteArrayOutputStream.toByteArray());
-        int totalWrite = 0;
-        while (totalWrite < buffer.capacity()) {
-            int writeStatus = datagramChannel.write(buffer);
-            totalWrite+=writeStatus;
-        }
+//        buffer.flip();
+        datagramChannel.send(buffer, addr);
     }
 
     /**
@@ -212,20 +156,13 @@ public class Server {
     private void openServerSocket() throws OpeningServerSocketException {
         try {
             App.logger.info("Server start...");
-//            serverSocket = new ServerSocket(port);
-//            serverSocket.setSoTimeout(soTimeout);
-            selector = Selector.open();
 
-//            serverSocketChannel = ServerSocketChannel.open();
-//            serverSocketChannel.configureBlocking(false);
             datagramChannel = DatagramChannel.open();
             datagramChannel.configureBlocking(false);
 
-//            serverSocketChannel.bind(new InetSocketAddress(port));
-//            serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+            addr = new InetSocketAddress("localhost", port);
 
-            datagramChannel.bind(new InetSocketAddress(port));
-//            datagramChannel.register(selector, SelectionKey.OP_ACCEPT);
+            datagramChannel.bind(addr);
 
             App.logger.info("Server started successfully.");
         } catch (IllegalArgumentException exception) {
@@ -240,14 +177,6 @@ public class Server {
         }
     }
 
-    public static DatagramChannel openChannel() throws IOException {
-        DatagramChannel datagramChannel = DatagramChannel.open();
-        return datagramChannel;
-    }
-
-    public static DatagramChannel bindChannel(SocketAddress local) throws IOException {
-        return openChannel().bind(local);
-    }
 
 
 }
