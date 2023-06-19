@@ -9,10 +9,11 @@ import common.interaction.ResponseCode;
 import common.utility.Outputer;
 
 import java.io.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.DatagramChannel;
 
 /**
  * Runs the client.
@@ -25,7 +26,7 @@ public class Client {
     private int maxReconnectionAttempts;
     private UserHandler userHandler;
 //    private SocketChannel socketChannel;
-    private DatagramChannel datagramChannel;
+    private DatagramSocket datagramSocket;
     private SocketAddress addr;
     private ObjectOutputStream serverWriter;
     private ObjectInputStream serverReader;
@@ -66,12 +67,10 @@ public class Client {
                 }
                 reconnectionAttempts++;
             }
-            if (datagramChannel != null) datagramChannel.close();
+            if (datagramSocket != null) datagramSocket.close();
             Outputer.println("Client job completed successfully.");
         } catch (NotInDeclaredLimitsException exception) {
             Outputer.printerror("Client cannot be started!");
-        } catch (IOException exception) {
-            Outputer.printerror("An error occurred while trying to terminate the connection to the server!");
         }
     }
 
@@ -83,9 +82,11 @@ public class Client {
             if (reconnectionAttempts >= 1) Outputer.println("Reconnecting to the server...");
 
             addr = new InetSocketAddress(host, port);
-            datagramChannel = DatagramChannel.open();
+            datagramSocket = new DatagramSocket();
+//            datagramChannel.configureBlocking(false);
+            datagramSocket.setSoTimeout(2000);
             
-            if (datagramChannel != null) {
+            if (datagramSocket != null) {
                 Outputer.println("Connected to server.");
             } else {
                 Outputer.println("Reconnecting to the server.");
@@ -115,9 +116,9 @@ public class Client {
                         userHandler.handle(null);
                 if (requestToServer.isEmpty()) continue;
 
-                // Gui request
+                // writing Request object here
                 myWriteObject(requestToServer);
-                // Cho de nhan ve response
+                // reading Response object here
                 serverResponse = myReadObject();
 
                 Outputer.print(serverResponse.getResponseBody());
@@ -153,14 +154,19 @@ public class Client {
         ByteBuffer buffer = ByteBuffer.allocate(1024*16);
 
         buffer.clear();
-        // Nhan UDP Packet
-        addr = datagramChannel.receive(buffer);
-        // Giai ma
+
+        DatagramPacket datagramPacket = new DatagramPacket(buffer.array(), buffer.array().length);
+
+        datagramSocket.receive(datagramPacket);
+
+//        int read = datagramChannel.read(buffer);
         if (addr == null) return serverResponse;
+
+//        buffer.flip();
 
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buffer.array());
         serverReader = new ObjectInputStream(byteArrayInputStream);
-        // Doc Object ben trong UDP Packet
+
         Object obj = serverReader.readObject();
 
         if (obj instanceof Response) {
@@ -170,16 +176,15 @@ public class Client {
     }
 
     private void myWriteObject(Request requestToServer) throws IOException {
-        // Chuan bi UDP packet
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         serverWriter = new ObjectOutputStream(byteArrayOutputStream);
         serverWriter.flush();
 
-        // Serialize duoc the hien o cho nay
         serverWriter.writeObject(requestToServer);
 
         ByteBuffer buffer = ByteBuffer.wrap(byteArrayOutputStream.toByteArray());
-        // Send UDP packet
-        datagramChannel.send(buffer, addr);
+
+//        datagramSocket.send(buffer, addr);
+        datagramSocket.send(new DatagramPacket(buffer.array(), buffer.array().length, addr));
     }
 }
