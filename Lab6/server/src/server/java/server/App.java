@@ -3,10 +3,9 @@ package server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import server.commands.*;
-import server.utility.FileManager;
-import server.utility.CollectionManager;
-import server.utility.CommandManager;
-import server.utility.RequestHandler;
+import server.utility.*;
+
+import java.util.Scanner;
 
 /**
  * Main server class. Creates all server instances.
@@ -44,8 +43,10 @@ public class App {
                 new CountGreaterThanLoyalCommand(collectionManager),
                 new ServerExitCommand()
         );
+        Console console = new Console(commandManager, new Scanner(System.in));
         RequestHandler requestHandler = new RequestHandler(commandManager);
         Server server = new Server(PORT, CONNECTION_TIMEOUT, requestHandler);
+        console.start();
         server.run();
     }
 }

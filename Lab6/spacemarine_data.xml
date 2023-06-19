@@ -18,23 +18,4 @@
       <world>ai</world>
     </chapter>
   </common.data.SpaceMarine>
-  <common.data.SpaceMarine>
-    <id>2</id>
-    <name>cuong</name>
-    <coordinates>
-      <x>150.0</x>
-      <y>150.0</y>
-    </coordinates>
-    <creationDate>2023-05-26T13:17:29.488160966+03:00[Europe/Moscow]</creationDate>
-    <health>100.0</health>
-    <loyal>true</loyal>
-    <height>180.0</height>
-    <meleeWeapon>POWER_FIST</meleeWeapon>
-    <chapter>
-      <name>aLoc</name>
-      <parentLegion>meDua</parentLegion>
-      <marinesCount>100</marinesCount>
-      <world>VN</world>
-    </chapter>
-  </common.data.SpaceMarine>
 </linked-list>
