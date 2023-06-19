@@ -1,8 +1,7 @@
 package server.utility;
 
-import server.commands.Command;
-import server.commands.*;
 import common.exceptions.HistoryIsEmptyException;
+import server.commands.*;
 
 import java.util.ArrayList;
 import java.util.List;

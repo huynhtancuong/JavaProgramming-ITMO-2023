@@ -1,12 +1,12 @@
 package client.utility;
 
+import client.App;
 import common.data.Chapter;
 import common.data.Coordinates;
 import common.data.MeleeWeapon;
 import common.exceptions.IncorrectInputInScriptException;
 import common.exceptions.MustBeNotEmptyException;
 import common.exceptions.NotInDeclaredLimitsException;
-import client.App;
 import common.utility.Outputer;
 
 import java.util.NoSuchElementException;

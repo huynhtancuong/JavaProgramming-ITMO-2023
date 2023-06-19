@@ -12,9 +12,7 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.*;
-import java.util.Iterator;
-import java.util.Set;
+import java.nio.channels.DatagramChannel;
 
 /**
  * Runs the server.
@@ -46,7 +44,7 @@ public class Server {
                 Response responseToUser = null;
                 try {
                     responseToUser = read();
-
+                    // responseToUser khac null khi lenh read() thuc hien thanh cong
                 }
                 catch (StreamCorruptedException | ClassNotFoundException e) {
                     Outputer.printerror("An error occurred while reading received data!");
@@ -60,8 +58,10 @@ public class Server {
                 }
 
                 try {
+                    //
                     if (responseToUser != null) {
                         write(responseToUser);
+                        // Khi client go lenh server_exit
                         if (responseToUser.getResponseCode() == ResponseCode.SERVER_EXIT) {
                             stop();
                         }
@@ -93,6 +93,7 @@ public class Server {
 
         ByteBuffer buffer = ByteBuffer.allocate(1024*16);
 
+        // Nhan request tu clien
         addr = datagramChannel.receive(buffer);
 
         Object obj = null;
@@ -111,6 +112,7 @@ public class Server {
         Response responseToUser = null;
         if (obj instanceof Request) {
             userRequest = (Request) obj;
+            // Xu ly request cua client va tao ra responseToUser
             responseToUser = requestHandler.handle(userRequest);
             App.logger.info("Request '" + userRequest.getCommandName() + "' successfully processed.");
 

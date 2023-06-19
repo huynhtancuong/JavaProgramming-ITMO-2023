@@ -1,7 +1,9 @@
 package client.utility;
 
 import client.App;
-import common.data.*;
+import common.data.Chapter;
+import common.data.Coordinates;
+import common.data.MeleeWeapon;
 import common.exceptions.CommandUsageException;
 import common.exceptions.IncorrectInputInScriptException;
 import common.exceptions.ScriptRecursionException;
@@ -53,12 +55,14 @@ public class UserHandler {
                         Outputer.println("Back to the script '" + scriptStack.pop().getName() + "'...");
                     }
                     if (fileMode()) {
+                        // Nhan input tu file
                         userInput = userScanner.nextLine();
                         if (!userInput.isEmpty()) {
                             Outputer.print(App.PS1);
                             Outputer.println(userInput);
                         }
                     } else {
+                        // Nhan input tu nguoi dung
                         Outputer.print(App.PS1);
                         userInput = userScanner.nextLine();
                     }

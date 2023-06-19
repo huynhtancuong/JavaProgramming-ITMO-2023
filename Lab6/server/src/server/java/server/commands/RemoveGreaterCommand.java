@@ -2,11 +2,10 @@ package server.commands;
 
 import common.data.SpaceMarine;
 import common.exceptions.CollectionIsEmptyException;
-import common.exceptions.IncorrectInputInScriptException;
 import common.exceptions.MarineNotFoundException;
 import common.exceptions.WrongAmountOfElementsException;
-import server.utility.CollectionManager;
 import common.interaction.MarineRaw;
+import server.utility.CollectionManager;
 import server.utility.ResponseOutputer;
 
 import java.time.ZonedDateTime;

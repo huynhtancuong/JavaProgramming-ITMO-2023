@@ -1,7 +1,6 @@
 package server.utility;
 
 import common.data.SpaceMarine;
-import common.data.SpaceMarine;
 import common.exceptions.CollectionIsEmptyException;
 
 import java.time.ZonedDateTime;
@@ -124,10 +123,15 @@ public class CollectionManager {
      * @return Sum of all marines' health or 0 if collection is empty.
      */
     public double getSumOfHealth() {
-        double sumOfHealth = 0;
-        for (SpaceMarine marine : marinesCollection) {
-            sumOfHealth += marine.getHealth();
-        }
+        // StreamAPI duoc the hien o cho nay
+        double sumOfHealth = marinesCollection.stream().mapToDouble(SpaceMarine::getHealth).sum();
+
+        // Cach lap trinh thong thuong
+//        double sumOfHealth = 0;
+//        for (SpaceMarine marine : marinesCollection) {
+//            sumOfHealth += marine.getHealth();
+//        }
+
         return sumOfHealth;
     }
 

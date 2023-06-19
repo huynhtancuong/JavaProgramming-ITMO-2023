@@ -10,11 +10,9 @@ import common.utility.Outputer;
 
 import java.io.*;
 import java.net.InetSocketAddress;
-import java.net.ProtocolFamily;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
-import java.nio.channels.SocketChannel;
 
 /**
  * Runs the client.
@@ -117,9 +115,9 @@ public class Client {
                         userHandler.handle(null);
                 if (requestToServer.isEmpty()) continue;
 
-                // writing Request object here
+                // Gui request
                 myWriteObject(requestToServer);
-                // reading Response object here
+                // Cho de nhan ve response
                 serverResponse = myReadObject();
 
                 Outputer.print(serverResponse.getResponseBody());
@@ -155,16 +153,14 @@ public class Client {
         ByteBuffer buffer = ByteBuffer.allocate(1024*16);
 
         buffer.clear();
+        // Nhan UDP Packet
         addr = datagramChannel.receive(buffer);
-
-//        int read = datagramChannel.read(buffer);
+        // Giai ma
         if (addr == null) return serverResponse;
-
-//        buffer.flip();
 
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(buffer.array());
         serverReader = new ObjectInputStream(byteArrayInputStream);
-
+        // Doc Object ben trong UDP Packet
         Object obj = serverReader.readObject();
 
         if (obj instanceof Response) {
@@ -174,13 +170,16 @@ public class Client {
     }
 
     private void myWriteObject(Request requestToServer) throws IOException {
+        // Chuan bi UDP packet
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         serverWriter = new ObjectOutputStream(byteArrayOutputStream);
         serverWriter.flush();
 
+        // Serialize duoc the hien o cho nay
         serverWriter.writeObject(requestToServer);
 
         ByteBuffer buffer = ByteBuffer.wrap(byteArrayOutputStream.toByteArray());
+        // Send UDP packet
         datagramChannel.send(buffer, addr);
     }
 }

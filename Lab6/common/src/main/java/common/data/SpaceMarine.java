@@ -1,9 +1,7 @@
 package common.data;
 
-import server.commands.ServerExitCommand;
-
-import java.time.ZonedDateTime;
 import java.io.Serializable;
+import java.time.ZonedDateTime;
 
 /**
  * Main character. Is stored in the collection.

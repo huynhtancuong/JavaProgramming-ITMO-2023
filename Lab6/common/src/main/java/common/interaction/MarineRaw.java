@@ -1,6 +1,9 @@
 package common.interaction;
 
-import common.data.*;
+import common.data.Chapter;
+import common.data.Coordinates;
+import common.data.MeleeWeapon;
+import common.data.SpaceMarine;
 
 import java.io.Serializable;
 
