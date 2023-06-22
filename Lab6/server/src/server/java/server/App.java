@@ -10,13 +10,13 @@ import java.util.Scanner;
 /**
  * Main server class. Creates all server instances.
  *
- * @author Huynh Tan Cuong.
+ * @author Pham Ngoc Tam Chau.
  */
 public class App {
     public static final int PORT = 25566;
     public static final int CONNECTION_TIMEOUT = 60 * 1000;
     public static final String ENV_VARIABLE = "HEHE";
-    public static final Logger logger = LoggerFactory.getLogger("ServerLogger");
+    public static final Logger logger = LoggerFactory.getLogger("Log4j2");
 
     public static void main(String[] args) {
         FileManager collectionFileManager = new FileManager(ENV_VARIABLE);
