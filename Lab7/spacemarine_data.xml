@@ -1,0 +1,21 @@
+<linked-list>
+  <common.data.SpaceMarine>
+    <id>1</id>
+    <name>chau</name>
+    <coordinates>
+      <x>100.0</x>
+      <y>100.0</y>
+    </coordinates>
+    <creationDate>2023-05-26T12:42:16.630637924+03:00[Europe/Moscow]</creationDate>
+    <health>100.0</health>
+    <loyal>true</loyal>
+    <height>160.0</height>
+    <meleeWeapon>POWER_FIST</meleeWeapon>
+    <chapter>
+      <name>chua</name>
+      <parentLegion>iu</parentLegion>
+      <marinesCount>100</marinesCount>
+      <world>ai</world>
+    </chapter>
+  </common.data.SpaceMarine>
+</linked-list>
