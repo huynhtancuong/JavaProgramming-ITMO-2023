@@ -10,6 +10,7 @@ import common.exceptions.ScriptRecursionException;
 import common.interaction.MarineRaw;
 import common.interaction.Request;
 import common.interaction.ResponseCode;
+import common.interaction.User;
 import common.utility.Outputer;
 
 import java.io.File;
@@ -38,7 +39,7 @@ public class UserHandler {
      * @param serverResponseCode Last server's response code.
      * @return New request to server.
      */
-    public Request handle(ResponseCode serverResponseCode) {
+    public Request handle(ResponseCode serverResponseCode, User user) {
         String userInput;
         String[] userCommand;
         ProcessingCode processingCode;
@@ -52,17 +53,15 @@ public class UserHandler {
                     while (fileMode() && !userScanner.hasNextLine()) {
                         userScanner.close();
                         userScanner = scannerStack.pop();
-                        Outputer.println("Back to the script '" + scriptStack.pop().getName() + "'...");
+                        scriptStack.pop();
                     }
                     if (fileMode()) {
-                        // Nhan input tu file
                         userInput = userScanner.nextLine();
                         if (!userInput.isEmpty()) {
                             Outputer.print(App.PS1);
                             Outputer.println(userInput);
                         }
                     } else {
-                        // Nhan input tu nguoi dung
                         Outputer.print(App.PS1);
                         userInput = userScanner.nextLine();
                     }
@@ -85,11 +84,11 @@ public class UserHandler {
                     throw new IncorrectInputInScriptException();
                 switch (processingCode) {
                     case OBJECT:
-                        MarineRaw ticketAddRaw = generateTicketAdd();
-                        return new Request(userCommand[0], userCommand[1], ticketAddRaw);
+                        MarineRaw marineAddRaw = generateMarineAdd();
+                        return new Request(userCommand[0], userCommand[1], marineAddRaw, user);
                     case UPDATE_OBJECT:
-                        MarineRaw ticketUpdateRaw = generateMarineUpdate();
-                        return new Request(userCommand[0], userCommand[1], ticketUpdateRaw);
+                        MarineRaw marineUpdateRaw = generateMarineUpdate();
+                        return new Request(userCommand[0], userCommand[1], marineUpdateRaw, user);
                     case SCRIPT:
                         File scriptFile = new File(userCommand[1]);
                         if (!scriptFile.exists()) throw new FileNotFoundException();
@@ -114,9 +113,9 @@ public class UserHandler {
                 userScanner = scannerStack.pop();
             }
             scriptStack.clear();
-            return new Request();
+            return new Request(user);
         }
-        return new Request(userCommand[0], userCommand[1]);
+        return new Request(userCommand[0], userCommand[1], null, user);
     }
 
     /**
@@ -199,12 +198,12 @@ public class UserHandler {
     }
 
     /**
-     * Generates ticket to add.
+     * Generates marine to add.
      *
-     * @return Ticket to add.
+     * @return Marine to add.
      * @throws IncorrectInputInScriptException When something went wrong in script.
      */
-    private MarineRaw generateTicketAdd() throws IncorrectInputInScriptException {
+    private MarineRaw generateMarineAdd() throws IncorrectInputInScriptException {
         MarineAsker marineAsker = new MarineAsker(userScanner);
         if (fileMode()) marineAsker.setFileMode();
         return new MarineRaw(

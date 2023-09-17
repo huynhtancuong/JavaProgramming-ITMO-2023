@@ -1,6 +1,7 @@
 package server.utility;
 
 import common.exceptions.HistoryIsEmptyException;
+import common.interaction.User;
 import server.commands.*;
 
 import java.util.ArrayList;
@@ -20,7 +21,6 @@ public class CommandManager {
     private Command updateCommand;
     private Command removeByIdCommand;
     private Command clearCommand;
-    private Command saveCommand;
     private Command exitCommand;
     private Command executeScriptCommand;
     private Command addIfMinCommand;
@@ -31,14 +31,17 @@ public class CommandManager {
     private Command maxByMeleeWeaponCommand;
     private Command maxByHeightCommand;
     private Command groupCountingByMeeleWeaponCommand;
-    private Command countGreaterThanLoyalCommand;
     private Command serverExitCommand;
+    private Command loginCommand;
+    private Command registerCommand;
 
-    public CommandManager(HelpCommand helpCommand, InfoCommand infoCommand, ShowCommand showCommand, AddCommand addCommand, UpdateCommand updateCommand,
-                          RemoveByIdCommand removeByIdCommand, ClearCommand clearCommand, SaveCommand saveCommand, ExitCommand exitCommand, ExecuteScriptCommand executeScriptCommand,
-                          AddIfMinCommand addIfMinCommand, AddIfMaxCommand addIfMaxCommand, RemoveGreaterCommand removeGreaterCommand, HistoryCommand historyCommand, SumOfHealthCommand sumOfHealthCommand,
-                          MaxByMeleeWeaponCommand maxByMeleeWeaponCommand, MaxByHeightCommand maxByHeightCommand, GroupCountingByMeleeWeaponCommand groupCountingByMeleeWeaponCommand, CountGreaterThanLoyalCommand countGreaterThanLoyalCommand,
-                          ServerExitCommand serverExitCommand) {
+    public CommandManager(HelpCommand helpCommand, InfoCommand infoCommand, ShowCommand showCommand, AddCommand addCommand,
+                          UpdateCommand updateCommand, RemoveByIdCommand removeByIdCommand, ClearCommand clearCommand,
+                          ExitCommand exitCommand, ExecuteScriptCommand executeScriptCommand, AddIfMinCommand addIfMinCommand,
+                          AddIfMaxCommand addIfMaxCommand, RemoveGreaterCommand removeGreaterCommand, HistoryCommand historyCommand,
+                          SumOfHealthCommand sumOfHealthCommand, MaxByMeleeWeaponCommand maxByMeleeWeaponCommand,
+                          MaxByHeightCommand maxByHeightCommand, GroupCountingByMeleeWeaponCommand groupCountingByMeleeWeaponCommand,
+                          ServerExitCommand serverExitCommand, Command loginCommand, Command registerCommand) {
         this.helpCommand = helpCommand;
         this.infoCommand = infoCommand;
         this.showCommand = showCommand;
@@ -46,7 +49,6 @@ public class CommandManager {
         this.updateCommand = updateCommand;
         this.removeByIdCommand = removeByIdCommand;
         this.clearCommand = clearCommand;
-        this.saveCommand = saveCommand;
         this.exitCommand = exitCommand;
         this.executeScriptCommand = executeScriptCommand;
         this.addIfMinCommand = addIfMinCommand;
@@ -57,8 +59,10 @@ public class CommandManager {
         this.maxByMeleeWeaponCommand = maxByMeleeWeaponCommand;
         this.maxByHeightCommand = maxByHeightCommand;
         this.groupCountingByMeeleWeaponCommand = groupCountingByMeleeWeaponCommand;
-        this.countGreaterThanLoyalCommand = countGreaterThanLoyalCommand;
         this.serverExitCommand = serverExitCommand;
+        this.loginCommand = loginCommand;
+        this.registerCommand = registerCommand;
+
 
         commands.add(helpCommand);
         commands.add(infoCommand);
@@ -67,7 +71,6 @@ public class CommandManager {
         commands.add(updateCommand);
         commands.add(removeByIdCommand);
         commands.add(clearCommand);
-        commands.add(saveCommand);
         commands.add(exitCommand);
         commands.add(executeScriptCommand);
         commands.add(addIfMinCommand);
@@ -76,9 +79,8 @@ public class CommandManager {
         commands.add(historyCommand);
         commands.add(sumOfHealthCommand);
         commands.add(maxByMeleeWeaponCommand);
-        commands.add(maxByHeightCommand);
+        commands.add(maxByHeightCommand); //
         commands.add(groupCountingByMeleeWeaponCommand);
-        commands.add(countGreaterThanLoyalCommand);
         commands.add(serverExitCommand);
     }
 
@@ -124,11 +126,11 @@ public class CommandManager {
     
     /**
      * Prints info about the all commands.
-     * @param argument Its argument.
+     * @param stringArgument Its argument.
      * @return Command exit status.
      */
-    public boolean help(String argument, Object objectArgument) {
-        if (helpCommand.execute(argument, objectArgument)) {
+    public boolean help(String stringArgument, Object objectArgument, User user) {
+        if (helpCommand.execute(stringArgument, objectArgument, user)) {
             for (Command command : commands) {
                 ResponseOutputer.appendtable(command.getName(), command.getDescription());
             }
@@ -138,124 +140,115 @@ public class CommandManager {
 
     /**
      * Executes needed command.
-     * @param argument Its argument.
+     * @param stringArgument Its argument.
      * @return Command exit status.
      */
-    public boolean info(String argument, Object objectArgument) {
-        return infoCommand.execute(argument, objectArgument);
+    public boolean info(String stringArgument, Object objectArgument, User user) {
+        return infoCommand.execute(stringArgument, objectArgument, user);
     }
 
-    public boolean serverExit(String stringArgument, Object objectArgument) {
-        save(stringArgument, objectArgument);
-        return serverExitCommand.execute(stringArgument, objectArgument);
-    }
-
-    /**
-     * Executes needed command.
-     * @param argument Its argument.
-     * @return Command exit status.
-     */
-    public boolean show(String argument, Object objectArgument) {
-        return showCommand.execute(argument, objectArgument);
+    public boolean serverExit(String stringArgument, Object objectArgument, User user) {
+//        save(stringArgument, objectArgument);
+        return serverExitCommand.execute(stringArgument, objectArgument, user);
     }
 
     /**
      * Executes needed command.
-     * @param argument Its argument.
+     * @param stringArgument Its argument.
      * @return Command exit status.
      */
-    public boolean add(String argument, Object objectArgument) {
-        return addCommand.execute(argument, objectArgument);
+    public boolean show(String stringArgument, Object objectArgument, User user) {
+        return showCommand.execute(stringArgument, objectArgument, user);
     }
 
     /**
      * Executes needed command.
-     * @param argument Its argument.
+     * @param stringArgument Its argument.
      * @return Command exit status.
      */
-    public boolean update(String argument, Object objectArgument) {
-        return updateCommand.execute(argument, objectArgument);
+    public boolean add(String stringArgument, Object objectArgument, User user) {
+        return addCommand.execute(stringArgument, objectArgument, user);
     }
 
     /**
      * Executes needed command.
-     * @param argument Its argument.
+     * @param stringArgument Its argument.
      * @return Command exit status.
      */
-    public boolean removeById(String argument, Object objectArgument) {
-        return removeByIdCommand.execute(argument, objectArgument);
+    public boolean update(String stringArgument, Object objectArgument, User user) {
+        return updateCommand.execute(stringArgument, objectArgument, user);
     }
 
     /**
      * Executes needed command.
-     * @param argument Its argument.
+     * @param stringArgument Its argument.
      * @return Command exit status.
      */
-    public boolean clear(String argument, Object objectArgument) {
-        return clearCommand.execute(argument, objectArgument);
+    public boolean removeById(String stringArgument, Object objectArgument, User user) {
+        return removeByIdCommand.execute(stringArgument, objectArgument, user);
     }
 
     /**
      * Executes needed command.
-     * @param argument Its argument.
+     * @param objectArgument Its argument.
      * @return Command exit status.
      */
-    public boolean save(String argument, Object objectArgument) {
-        return saveCommand.execute(argument, objectArgument);
+    public boolean clear(String stringArgument, Object objectArgument, User user) {
+        return clearCommand.execute(stringArgument, objectArgument, user);
     }
 
     /**
      * Executes needed command.
-     * @param argument Its argument.
+     * @param stringArgument Its argument.
      * @return Command exit status.
      */
-    public boolean exit(String argument, Object objectArgument) {
-        return exitCommand.execute(argument, objectArgument);
+    public boolean exit(String stringArgument, Object objectArgument, User user) {
+        return exitCommand.execute(stringArgument, objectArgument, user);
     }
 
     /**
      * Executes needed command.
-     * @param argument Its argument.
+     * @param stringArgument Its argument.
      * @return Command exit status.
      */
-    public boolean executeScript(String argument, Object objectArgument) {
-        return executeScriptCommand.execute(argument, objectArgument);
+    public boolean executeScript(String stringArgument, Object objectArgument, User user) {
+        return executeScriptCommand.execute(stringArgument, objectArgument, user);
     }
 
     /**
      * Executes needed command.
-     * @param argument Its argument.
+     * @param stringArgument Its argument.
      * @return Command exit status.
      */
-    public boolean addIfMin(String argument, Object objectArgument) {
-        return addIfMinCommand.execute(argument, objectArgument);
+    public boolean addIfMin(String stringArgument, Object objectArgument, User user) {
+        return addIfMinCommand.execute(stringArgument, objectArgument, user);
     }
 
     /**
      * Executes needed command.
-     * @param argument Its argument.
+     * @param stringArgument Its argument.
      * @return Command exit status.
      */
-    public boolean addIfMax(String argument, Object objectArgument) {
-        return addIfMaxCommand.execute(argument, objectArgument);
+    public boolean addIfMax(String stringArgument, Object objectArgument, User user) {
+        return addIfMaxCommand.execute(stringArgument, objectArgument, user);
     }
 
     /**
      * Executes needed command.
-     * @param argument Its argument.
+     * @param stringArgument Its argument.
      * @return Command exit status.
      */
-    public boolean removeGreater(String argument, Object objectArgument) {
-        return removeGreaterCommand.execute(argument, objectArgument);
+    public boolean removeGreater(String stringArgument, Object objectArgument, User user) {
+        return removeGreaterCommand.execute(stringArgument, objectArgument, user);
     }
 
     /**
      * Prints the history of used commands.
-     * @param argument Its argument.
+     * @param stringArgument Its argument.
      * @return Command exit status.
      */
-    public boolean history(String argument, Object objectArgument) {
-        if (historyCommand.execute(argument, objectArgument)) {
+    public boolean history(String stringArgument, Object objectArgument, User user) {
+        if (historyCommand.execute(stringArgument, objectArgument, user)) {
             try {
                 if (commandHistory.length == 0) throw new HistoryIsEmptyException();
     
@@ -273,44 +266,59 @@ public class CommandManager {
 
     /**
      * Executes needed command.
-     * @param argument Its argument.
+     * @param stringArgument Its argument.
      * @return Command exit status.
      */
-    public boolean sumOfHealth(String argument, Object objectArgument) {
-        return sumOfHealthCommand.execute(argument, objectArgument);
+    public boolean sumOfHealth(String stringArgument, Object objectArgument, User user) {
+        return sumOfHealthCommand.execute(stringArgument, objectArgument, user);
     }
 
     /**
      * Executes needed command.
-     * @param argument Its argument.
+     * @param stringArgument Its argument.
      * @return Command exit status.
      */
-    public boolean maxByMeleeWeapon(String argument, Object objectArgument) { return maxByMeleeWeaponCommand.execute(argument, objectArgument);
+    public boolean maxByMeleeWeapon(String stringArgument, Object objectArgument, User user) { return maxByMeleeWeaponCommand.execute(stringArgument, objectArgument, user);
     }
 
     /**
      * Executes needed command.
-     * @param argument Its argument.
+     * @param stringArgument Its argument.
      * @return Command exit status.
      */
-    public boolean maxByHeight(String argument, Object objectArgument) {
-        return maxByHeightCommand.execute(argument, objectArgument);
+    public boolean maxByHeight(String stringArgument, Object objectArgument, User user) {
+        return maxByHeightCommand.execute(stringArgument, objectArgument, user);
     }
 
     /**
      * Executes needed command.
-     * @param argument Its argument.
+     * @param stringArgument Its argument.
      * @return Command exit status.
      */
-    public boolean groupCountingByMeeleWeapon(String argument, Object objectArgument) { return groupCountingByMeeleWeaponCommand.execute(argument, objectArgument); }
+    public boolean groupCountingByMeeleWeapon(String stringArgument, Object objectArgument, User user) { return groupCountingByMeeleWeaponCommand.execute(stringArgument, objectArgument, user); }
 
     /**
      * Executes needed command.
-     * @param argument Its argument.
+     *
+     * @param stringArgument Its string argument.
+     * @param objectArgument Its object argument.
+     * @param user           User object.
      * @return Command exit status.
      */
-    public boolean countGreaterThanLoyal(String argument, Object objectArgument) {
-        return countGreaterThanLoyalCommand.execute(argument, objectArgument);
+    public boolean login(String stringArgument, Object objectArgument, User user) {
+        return loginCommand.execute(stringArgument, objectArgument, user);
+    }
+
+    /**
+     * Executes needed command.
+     *
+     * @param stringArgument Its string argument.
+     * @param objectArgument Its object argument.
+     * @param user           User object.
+     * @return Command exit status.
+     */
+    public boolean register(String stringArgument, Object objectArgument, User user) {
+        return registerCommand.execute(stringArgument, objectArgument, user);
     }
 
     @Override

@@ -1,5 +1,7 @@
 package common.data;
 
+import common.interaction.User;
+
 import java.io.Serializable;
 import java.time.ZonedDateTime;
 
@@ -17,7 +19,9 @@ public class SpaceMarine implements Comparable<SpaceMarine>, Serializable {
     private MeleeWeapon meleeWeapon;
     private Chapter chapter;
 
-    public SpaceMarine(Long id, String name, Coordinates coordinates, ZonedDateTime creationDate, double health, Boolean loyal, float height, MeleeWeapon meleeWeapon, Chapter chapter) {
+    private User owner;
+
+    public SpaceMarine(Long id, String name, Coordinates coordinates, ZonedDateTime creationDate, double health, Boolean loyal, float height, MeleeWeapon meleeWeapon, Chapter chapter, User owner) {
         this.id = id;
         this.name = name;
         this.coordinates = coordinates;
@@ -27,10 +31,11 @@ public class SpaceMarine implements Comparable<SpaceMarine>, Serializable {
         this.height=height;
         this.meleeWeapon = meleeWeapon;
         this.chapter = chapter;
+        this.owner = owner;
     }
 
     /**
-     * @return ID of the marine.
+     * @return ID of the mariƒne.
      */
     public Long getId() {
         return id;
@@ -91,6 +96,13 @@ public class SpaceMarine implements Comparable<SpaceMarine>, Serializable {
     }
 
     /**
+     * @return owner
+     */
+    public User getOwner() {
+        return owner;
+    }
+
+    /**
      * Check spaceMarine is vailid or not.
      */
     public boolean verifySpaceMarine(){
@@ -113,7 +125,7 @@ public class SpaceMarine implements Comparable<SpaceMarine>, Serializable {
     public String toString() {
         String info = "";
         info += "Created number: " + id;
-        info += " (Added: " + creationDate.toLocalDate() + " " + creationDate.toLocalTime() + ")";
+        info += " (Added: " + owner.getUsername() + creationDate.toLocalDate() + " " + creationDate.toLocalTime() + ")";
         info += "\n Name: " + name;
         info += "\n Coordinate: " + coordinates;
         info += "\n Health: " + health;

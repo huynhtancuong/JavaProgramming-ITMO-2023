@@ -1,10 +1,14 @@
 package server.commands;
 
+import common.exceptions.DatabaseHandlingException;
+import common.exceptions.UserIsNotFoundException;
 import common.exceptions.WrongAmountOfElementsException;
-import common.interaction.MarineRaw;
+import common.interaction.User;
 import server.utility.CollectionManager;
+import server.utility.DatabaseUserManager;
 import server.utility.ResponseOutputer;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 
 /**
@@ -13,38 +17,38 @@ import java.time.ZonedDateTime;
 public class InfoCommand extends AbstractCommand {
     private CollectionManager collectionManager;
 
-    public InfoCommand(CollectionManager collectionManager) {
-        super("info", "",   "display information about the collection");
+    public InfoCommand(CollectionManager collectionManager, DatabaseUserManager databaseUserManager) {
+        super("info", "", "display information about the collection");
         this.collectionManager = collectionManager;
+        this.databaseUserManager = databaseUserManager;
     }
 
     /**
      * Executes the command.
+     *
      * @return Command exit status.
      */
     @Override
-    public boolean execute(String argument, Object objectArgument) {
+    public boolean execute(String stringArgument, Object objectArgument, User user) {
         try {
-            if (!argument.isEmpty()) throw new WrongAmountOfElementsException();
-            MarineRaw marineRaw = (MarineRaw) objectArgument;
+            if (!databaseUserManager.checkUserByUsernameAndPassword(user)) throw new UserIsNotFoundException();
+            if (!stringArgument.isEmpty() || objectArgument != null) throw new WrongAmountOfElementsException();
             ZonedDateTime lastInitTime = collectionManager.getLastInitTime();
-            String lastInitTimeString = (lastInitTime == null) ? "в данной сессии инициализации еще не происходило" :
-                                        lastInitTime.toLocalDate().toString() + " " + lastInitTime.toLocalTime().toString();
-            
-            ZonedDateTime lastSaveTime = collectionManager.getLastSaveTime();
-            String lastSaveTimeString = (lastSaveTime == null) ? "в данной сессии сохранения еще не происходило" :
-                                        lastSaveTime.toLocalDate().toString() + " " + lastSaveTime.toLocalTime().toString();
+            String lastInitTimeString = (lastInitTime == null) ? "initialization has not yet taken place in this session" :
+                    lastInitTime.toLocalDate().toString() + " " + lastInitTime.toLocalTime().toString();
 
-            ResponseOutputer.appendln("Сведения о коллекции:");
-            ResponseOutputer.appendln(" Тип: " + collectionManager.collectionType());
-            ResponseOutputer.appendln(" Количество элементов: " + collectionManager.collectionSize());
-            ResponseOutputer.appendln(" Дата последнего сохранения: " + lastSaveTimeString);
-            ResponseOutputer.appendln(" Дата последней инициализации: " + lastInitTimeString);
+            ResponseOutputer.appendln("Collection details:");
+            ResponseOutputer.appendln(" Type of: " + collectionManager.collectionType());
+            ResponseOutputer.appendln(" Amount of elements: " + collectionManager.collectionSize());
+            ResponseOutputer.appendln(" Date of last initialization: " + lastInitTimeString);
             return true;
         } catch (WrongAmountOfElementsException exception) {
-            ResponseOutputer.appendln("Использование: '" + getName() + "'");
+            ResponseOutputer.appendln("Usage: '" + getName() + " " + getUsage() + "'");
+        } catch (UserIsNotFoundException e) {
+            ResponseOutputer.appenderror("Incorrect username or password!");
+        } catch (DatabaseHandlingException e) {
+            throw new RuntimeException(e);
         }
         return false;
     }
-
 }

@@ -1,28 +1,38 @@
 package server.commands;
 
+import common.exceptions.DatabaseHandlingException;
+import common.exceptions.UserIsNotFoundException;
 import common.exceptions.WrongAmountOfElementsException;
+import common.interaction.User;
+import server.utility.DatabaseUserManager;
 import server.utility.ResponseOutputer;
 
 /**
- * Command 'execute_script'. Execute scripts from a file. Actually only checks argument and prints messages.
+ * Command 'execute_script'. Executes scripts from a file. Ectually only checks argument and prints messages.
  */
 public class ExecuteScriptCommand extends AbstractCommand {
-    public ExecuteScriptCommand() {
-        super("execute_script <file_name>", "", "execute script from specified file");
+    public ExecuteScriptCommand(DatabaseUserManager databaseUserManager) {
+        super("execute_script", "<file_name>", "execute script from specified file");
+        this.databaseUserManager = databaseUserManager;
     }
 
     /**
      * Executes the command, but partially.
+     *
      * @return Command exit status.
      */
     @Override
-    public boolean execute(String argument, Object objectArgument) {
+    public boolean execute(String stringArgument, Object objectArgument, User user) {
         try {
-            if (argument.isEmpty()) throw new WrongAmountOfElementsException();
-            ResponseOutputer.appendln("Выполняю скрипт '" + argument + "'...");
+            if (!databaseUserManager.checkUserByUsernameAndPassword(user)) throw new UserIsNotFoundException();
+            if (stringArgument.isEmpty() || objectArgument != null) throw new WrongAmountOfElementsException();
             return true;
         } catch (WrongAmountOfElementsException exception) {
-            ResponseOutputer.appendln("Использование: '" + getName() + "'");
+            ResponseOutputer.appendln("Usage: '" + getName() + " " + getUsage() + "'");
+        } catch (UserIsNotFoundException e) {
+            ResponseOutputer.appenderror("Incorrect username or password!");
+        } catch (DatabaseHandlingException e) {
+            throw new RuntimeException(e);
         }
         return false;
     }

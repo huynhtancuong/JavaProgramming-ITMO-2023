@@ -6,7 +6,7 @@ import common.interaction.Request;
 import common.interaction.Response;
 import common.interaction.ResponseCode;
 import common.utility.Outputer;
-import server.utility.RequestHandler;
+import server.utility.HandleResquestTask;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -20,16 +20,16 @@ import java.nio.channels.DatagramChannel;
 public class Server {
     private final int port;
 
-    private final RequestHandler requestHandler;
+    private final HandleResquestTask handleResquestTask;
     // NonBlocking IO
     private DatagramChannel datagramChannel;
     private SocketAddress addr;
     private Request userRequest = null;
 //     private Response responseToUser = null;
 
-    public Server(int port, int soTimeout, RequestHandler requestHandler) {
+    public Server(int port, int soTimeout, HandleResquestTask handleResquestTask) {
         this.port = port;
-        this.requestHandler = requestHandler;
+        this.handleResquestTask = handleResquestTask;
     }
 
     /**
@@ -113,7 +113,7 @@ public class Server {
         if (obj instanceof Request) {
             userRequest = (Request) obj;
             // Xu ly request cua client va tao ra responseToUser
-            responseToUser = requestHandler.handle(userRequest);
+            responseToUser = handleResquestTask.handle(userRequest);
             App.logger.info("Request '" + userRequest.getCommandName() + "' successfully processed.");
 
         }

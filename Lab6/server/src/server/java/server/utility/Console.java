@@ -77,13 +77,9 @@ public class Console implements Runnable{
         switch (userCommand[0]) {
             case "":
                 return 3;
-            case "save":
-                if (!commandManager.save(userCommand[1], null)) return 1;
-                break;
             default:
                 return 3;
         }
-        return 0;
     }
 
     /**

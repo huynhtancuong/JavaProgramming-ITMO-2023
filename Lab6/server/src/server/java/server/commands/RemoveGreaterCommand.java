@@ -1,13 +1,15 @@
 package server.commands;
 
 import common.data.SpaceMarine;
-import common.exceptions.CollectionIsEmptyException;
-import common.exceptions.MarineNotFoundException;
-import common.exceptions.WrongAmountOfElementsException;
+import common.exceptions.*;
 import common.interaction.MarineRaw;
+import common.interaction.User;
 import server.utility.CollectionManager;
+import server.utility.DatabaseCollectionManager;
+import server.utility.DatabaseUserManager;
 import server.utility.ResponseOutputer;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 
 /**
@@ -15,44 +17,69 @@ import java.time.ZonedDateTime;
  */
 public class RemoveGreaterCommand extends AbstractCommand {
     private CollectionManager collectionManager;
+    private DatabaseCollectionManager databaseCollectionManager;
 
-    public RemoveGreaterCommand(CollectionManager collectionManager) {
-        super("remove_greater {element}", "", "remove from the collection all elements greater than the given");
+    public RemoveGreaterCommand(CollectionManager collectionManager, DatabaseCollectionManager databaseCollectionManager, DatabaseUserManager databaseUserManager) {
+        super("remove_greater", "{element}", "remove from the collection all elements greater than the given");
         this.collectionManager = collectionManager;
+        this.databaseCollectionManager = databaseCollectionManager;
+        this.databaseUserManager = databaseUserManager;
     }
 
     /**
      * Executes the command.
+     *
      * @return Command exit status.
      */
     @Override
-    public boolean execute(String argument, Object objectArgument) {
+    public boolean execute(String stringArgument, Object objectArgument, User user) {
         try {
-            if (!argument.isEmpty()) throw new WrongAmountOfElementsException();
-            MarineRaw marineRaw = (MarineRaw) objectArgument;
+            if (!databaseUserManager.checkUserByUsernameAndPassword(user)) throw new UserIsNotFoundException();
+            if (!stringArgument.isEmpty() || objectArgument == null) throw new WrongAmountOfElementsException();
             if (collectionManager.collectionSize() == 0) throw new CollectionIsEmptyException();
+            MarineRaw marineRaw = (MarineRaw) objectArgument;
             SpaceMarine marineToFind = new SpaceMarine(
-                collectionManager.generateNextId(),
-                marineRaw.getName(),
-                marineRaw.getCoordinates(),
-                ZonedDateTime.now(),
-                marineRaw.getHealth(),
-                marineRaw.getLoyal(),
-                marineRaw.getHeight(),
-                marineRaw.getMeleeWeapon(),
-                marineRaw.getChapter()
+                    0L,
+                    marineRaw.getName(),
+                    marineRaw.getCoordinates(),
+                    ZonedDateTime.now(),
+                    marineRaw.getHealth(),
+                    marineRaw.getLoyal(),
+                    marineRaw.getHeight(),
+                    marineRaw.getMeleeWeapon(),
+                    marineRaw.getChapter(),
+                    user
             );
             SpaceMarine marineFromCollection = collectionManager.getByValue(marineToFind);
             if (marineFromCollection == null) throw new MarineNotFoundException();
-            collectionManager.removeGreater(marineFromCollection);
-            ResponseOutputer.appendln("Солдаты успешно удалены!");
+            for (SpaceMarine marine : collectionManager.getGreater(marineFromCollection)) {
+                if (!marine.getOwner().equals(user)) throw new PermissionDeniedException();
+                if (!databaseCollectionManager.checkMarineUserId(marine.getId(), user)) throw new ManualDatabaseEditException();
+            }
+            for (SpaceMarine marine : collectionManager.getGreater(marineFromCollection)) {
+                databaseCollectionManager.deleteMarineById(marine.getId());
+                collectionManager.removeFromCollection(marine);
+            }
+            ResponseOutputer.appendln("Soldiers successfully removed!");
             return true;
         } catch (WrongAmountOfElementsException exception) {
-            ResponseOutputer.appendln("Использование: '" + getName() + "'");
+            ResponseOutputer.appendln("Usage: '" + getName() + " " + getUsage() + "'");
         } catch (CollectionIsEmptyException exception) {
-            ResponseOutputer.appenderror("Коллекция пуста!");
+            ResponseOutputer.appenderror("Collection is empty!");
         } catch (MarineNotFoundException exception) {
-            ResponseOutputer.appenderror("Солдата с такими характеристиками в коллекции нет!");
+            ResponseOutputer.appenderror("There is no soldier with such characteristics in the collection!");
+        } catch (ClassCastException exception) {
+            ResponseOutputer.appenderror("The object passed by the client is invalid!");
+        } catch (DatabaseHandlingException exception) {
+            ResponseOutputer.appenderror("An error occurred while accessing the database!");
+        } catch (PermissionDeniedException exception) {
+            ResponseOutputer.appenderror("Insufficient rights to execute this command!");
+            ResponseOutputer.appendln("Objects owned by other users are read-only.");
+        } catch (ManualDatabaseEditException exception) {
+            ResponseOutputer.appenderror("A direct database change has occurred!");
+            ResponseOutputer.appendln("A direct database change has occurred.");
+        } catch (UserIsNotFoundException e) {
+            ResponseOutputer.appenderror("Incorrect username or password!");
         }
         return false;
     }

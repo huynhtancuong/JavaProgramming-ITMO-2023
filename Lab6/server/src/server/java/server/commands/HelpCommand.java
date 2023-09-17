@@ -1,7 +1,7 @@
 package server.commands;
 
 import common.exceptions.WrongAmountOfElementsException;
-import common.interaction.MarineRaw;
+import common.interaction.User;
 import server.utility.ResponseOutputer;
 
 /**
@@ -15,16 +15,16 @@ public class HelpCommand extends AbstractCommand {
 
     /**
      * Executes the command.
+     *
      * @return Command exit status.
      */
     @Override
-    public boolean execute(String argument, Object objectArgument) {
+    public boolean execute(String stringArgument, Object objectArgument, User user) {
         try {
-            if (!argument.isEmpty()) throw new WrongAmountOfElementsException();
-            MarineRaw marineRaw = (MarineRaw) objectArgument;
+            if (!stringArgument.isEmpty() || objectArgument != null) throw new WrongAmountOfElementsException();
             return true;
         } catch (WrongAmountOfElementsException exception) {
-            ResponseOutputer.appendln("Использование: '" + getName() + "'");
+            ResponseOutputer.appendln("Usage: '" + getName() + " " + getUsage() + "'");
         }
         return false;
     }

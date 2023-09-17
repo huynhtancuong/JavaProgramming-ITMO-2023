@@ -1,10 +1,11 @@
 package server.commands;
 
 import common.data.SpaceMarine;
-import common.exceptions.CollectionIsEmptyException;
-import common.exceptions.MarineNotFoundException;
-import common.exceptions.WrongAmountOfElementsException;
+import common.exceptions.*;
+import common.interaction.User;
 import server.utility.CollectionManager;
+import server.utility.DatabaseCollectionManager;
+import server.utility.DatabaseUserManager;
 import server.utility.ResponseOutputer;
 
 /**
@@ -12,35 +13,53 @@ import server.utility.ResponseOutputer;
  */
 public class RemoveByIdCommand extends AbstractCommand {
     private CollectionManager collectionManager;
+    private DatabaseCollectionManager databaseCollectionManager;
 
-    public RemoveByIdCommand(CollectionManager collectionManager) {
-        super("remove_by_id <ID>", "", "remove item from collection by ID");
+    public RemoveByIdCommand(CollectionManager collectionManager, DatabaseCollectionManager databaseCollectionManager, DatabaseUserManager databaseUserManager) {
+        super("remove_by_id", "<ID>", "remove item from collection by ID");
         this.collectionManager = collectionManager;
+        this.databaseCollectionManager = databaseCollectionManager;
+        this.databaseUserManager = databaseUserManager;
     }
 
     /**
      * Executes the command.
+     *
      * @return Command exit status.
      */
     @Override
-    public boolean execute(String argument, Object objectArgument) {
+    public boolean execute(String stringArgument, Object objectArgument, User user) {
         try {
-            if (argument.isEmpty()) throw new WrongAmountOfElementsException();
+            if (!databaseUserManager.checkUserByUsernameAndPassword(user)) throw new UserIsNotFoundException();
+            if (stringArgument.isEmpty() || objectArgument != null) throw new WrongAmountOfElementsException();
             if (collectionManager.collectionSize() == 0) throw new CollectionIsEmptyException();
-            Long id = Long.parseLong(argument);
+            long id = Long.parseLong(stringArgument);
             SpaceMarine marineToRemove = collectionManager.getById(id);
             if (marineToRemove == null) throw new MarineNotFoundException();
+            if (!marineToRemove.getOwner().equals(user)) throw new PermissionDeniedException();
+            if (!databaseCollectionManager.checkMarineUserId(marineToRemove.getId(), user)) throw new ManualDatabaseEditException();
+            databaseCollectionManager.deleteMarineById(id);
             collectionManager.removeFromCollection(marineToRemove);
-            ResponseOutputer.appendln("Солдат успешно удален!");
+            ResponseOutputer.appendln("Soldier successfully removed!");
             return true;
         } catch (WrongAmountOfElementsException exception) {
-            ResponseOutputer.appendln("Использование: '" + getName() + "'");
+            ResponseOutputer.appendln("Usage: '" + getName() + " " + getUsage() + "'");
         } catch (CollectionIsEmptyException exception) {
-            ResponseOutputer.appenderror("Коллекция пуста!");
+            ResponseOutputer.appenderror("Collection is empty!");
         } catch (NumberFormatException exception) {
-            ResponseOutputer.appenderror("ID должен быть представлен числом!");
+            ResponseOutputer.appenderror("ID must be represented by a number!");
         } catch (MarineNotFoundException exception) {
-            ResponseOutputer.appenderror("Солдата с таким ID в коллекции нет!");
+            ResponseOutputer.appenderror("There is no soldier with this ID in the collection!");
+        } catch (DatabaseHandlingException exception) {
+            ResponseOutputer.appenderror("An error occurred while accessing the database!");
+        } catch (PermissionDeniedException exception) {
+            ResponseOutputer.appenderror("Insufficient rights to execute this command!");
+            ResponseOutputer.appendln("Objects owned by other users are read-only.");
+        } catch (ManualDatabaseEditException exception) {
+            ResponseOutputer.appenderror("A direct database change has occurred!");
+            ResponseOutputer.appendln("Restart the client to avoid possible errors.");
+        } catch (UserIsNotFoundException e) {
+            ResponseOutputer.appenderror("Incorrect username or password!");
         }
         return false;
     }

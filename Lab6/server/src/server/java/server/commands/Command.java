@@ -1,5 +1,7 @@
 package server.commands;
 
+import common.interaction.User;
+
 /**
  * A interface for Command structure
  */
@@ -18,8 +20,8 @@ public interface Command {
     String getName();
 
     /**
-     * @param stringArgument argument of the command
+     * @param commandStringArgument argument of the command
      * @return exit status of command
      */
-    boolean execute(String stringArgument, Object commandObjectArgument);
+    boolean execute(String commandStringArgument, Object commandObjectArgument, User user);
 }

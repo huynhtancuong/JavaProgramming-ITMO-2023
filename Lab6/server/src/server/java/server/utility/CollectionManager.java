@@ -1,24 +1,31 @@
 package server.utility;
 
+import com.sun.source.tree.Tree;
 import common.data.SpaceMarine;
 import common.exceptions.CollectionIsEmptyException;
+import common.exceptions.DatabaseHandlingException;
+import common.utility.Outputer;
+import server.App;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.LinkedList;
+import java.util.NavigableSet;
+import java.util.TreeSet;
 
 /**
  * Operates the collection itself.
  */
 public class CollectionManager {
+    private final DatabaseCollectionManager databaseCollectionManager;
     private LinkedList<SpaceMarine> marinesCollection =  new LinkedList<>();
     private ZonedDateTime lastInitTime;
     private ZonedDateTime lastSaveTime;
-    private FileManager fileManager;
 
-    public CollectionManager(FileManager fileManager) {
+    public CollectionManager(DatabaseCollectionManager databaseCollectionManager) {
         this.lastInitTime = null;
         this.lastSaveTime = null;
-        this.fileManager = fileManager;
+        this.databaseCollectionManager = databaseCollectionManager;
         loadCollection();
     }
     
@@ -136,6 +143,14 @@ public class CollectionManager {
     }
 
     /**
+     * @return Collection content or corresponding string if collection is empty.
+     */
+    public String showCollection() {
+        if (marinesCollection.isEmpty()) return "Collection is empty!";
+        return marinesCollection.stream().reduce("", (sum, m) -> sum += m + "\n\n", (sum1, sum2) -> sum1 + sum2).trim();
+    }
+
+    /**
      * @return Marine, who has max melee weapon.
      * @throws CollectionIsEmptyException If collection is empty.
      */
@@ -165,6 +180,20 @@ public class CollectionManager {
             }
         }
         return maxMarine.toString();
+    }
+
+    /**
+     * Remove marines greater than the selected one.
+     *
+     * @param marineToCompare A marine to compare with.
+     * @return Greater marines list.
+     */
+    public TreeSet<SpaceMarine> getGreater(SpaceMarine marineToCompare) {
+        return marinesCollection.stream().filter(marine -> marine.compareTo(marineToCompare) > 0).collect(
+                TreeSet::new,
+                TreeSet::add,
+                TreeSet::addAll
+        );
     }
 
     /**
@@ -207,22 +236,21 @@ public class CollectionManager {
         return marinesCollection.getLast().getId() + 1;
     }
 
-    /**
-     * Saves the collection to file.
-     */
-    public void saveCollection() {
-            fileManager.writeCollection(marinesCollection);
-            lastSaveTime = ZonedDateTime.now();
-    }
 
     /**
      * Loads the collection from file.
      */
     private void loadCollection() {
-        marinesCollection = fileManager.readCollection();
-        marinesCollection = verifyCollection(marinesCollection);
-        marinesCollection = regenerateID(marinesCollection);
-        lastInitTime = ZonedDateTime.now();
+        try {
+            marinesCollection = databaseCollectionManager.getCollection();
+            lastInitTime = ZonedDateTime.now();
+            Outputer.println("Collection loaded.");
+            App.logger.info("Collection loaded.");
+        } catch (DatabaseHandlingException exception) {
+            marinesCollection = new LinkedList<>();
+            Outputer.printerror("Collection could not be loaded!");
+            App.logger.error("Collection could not be loaded!");
+        }
     }
 
     private LinkedList<SpaceMarine> regenerateID(LinkedList<SpaceMarine> marinesCollection) {

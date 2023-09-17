@@ -1,11 +1,13 @@
 package client;
 
+import client.utility.AuthHandler;
 import client.utility.UserHandler;
 import common.exceptions.ConnectionErrorException;
 import common.exceptions.NotInDeclaredLimitsException;
 import common.interaction.Request;
 import common.interaction.Response;
 import common.interaction.ResponseCode;
+import common.interaction.User;
 import common.utility.Outputer;
 
 import java.io.*;
@@ -30,13 +32,17 @@ public class Client {
     private SocketAddress addr;
     private ObjectOutputStream serverWriter;
     private ObjectInputStream serverReader;
+    private AuthHandler authHandler;
+    private User user;
 
-    public Client(String host, int port, int reconnectionTimeout, int maxReconnectionAttempts, UserHandler userHandler) {
+    public Client(String host, int port, int reconnectionTimeout, int maxReconnectionAttempts, UserHandler userHandler,
+                  AuthHandler authHandler) {
         this.host = host;
         this.port = port;
         this.reconnectionTimeout = reconnectionTimeout;
         this.maxReconnectionAttempts = maxReconnectionAttempts;
         this.userHandler = userHandler;
+        this.authHandler = authHandler;
     }
 
     /**
@@ -48,6 +54,7 @@ public class Client {
             while (processingStatus) {
                 try {
                     connectToServer();
+                    processAuthentication();
                     processingStatus = processRequestToServer();
                 } catch (ConnectionErrorException exception) {
                     if (reconnectionAttempts >= maxReconnectionAttempts) {
@@ -112,8 +119,8 @@ public class Client {
         Response serverResponse = null;
         do {
             try {
-                requestToServer = serverResponse != null ? userHandler.handle(serverResponse.getResponseCode()) :
-                        userHandler.handle(null);
+                requestToServer = serverResponse != null ? userHandler.handle(serverResponse.getResponseCode(), user) :
+                        userHandler.handle(null, user);
                 if (requestToServer.isEmpty()) continue;
 
                 // writing Request object here
@@ -187,4 +194,34 @@ public class Client {
 //        datagramSocket.send(buffer, addr);
         datagramSocket.send(new DatagramPacket(buffer.array(), buffer.array().length, addr));
     }
+
+    /**
+     * Handle process authentication.
+     */
+    private void processAuthentication() {
+        Request requestToServer = null;
+        Response serverResponse = null;
+        do {
+            try {
+                requestToServer = authHandler.handle();
+                if (requestToServer.isEmpty()) continue;
+                myWriteObject(requestToServer);
+                serverResponse = (Response) myReadObject();
+                Outputer.print(serverResponse.getResponseBody());
+            } catch (InvalidClassException | NotSerializableException exception) {
+                Outputer.printerror("An error occurred while sending data to the server!");
+            } catch (ClassNotFoundException exception) {
+                Outputer.printerror("An error occurred while reading received data!");
+            } catch (IOException exception) {
+                Outputer.printerror("Server connection lost!");
+                try {
+                    connectToServer();
+                } catch (ConnectionErrorException | NotInDeclaredLimitsException reconnectionException) {
+                    Outputer.println("Please try again later.");
+                }
+            }
+        } while (serverResponse == null || !serverResponse.getResponseCode().equals(ResponseCode.OK));
+        user = requestToServer.getUser();
+    }
 }
+
