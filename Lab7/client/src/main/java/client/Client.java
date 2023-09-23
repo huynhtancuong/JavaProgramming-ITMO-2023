@@ -91,7 +91,7 @@ public class Client {
             addr = new InetSocketAddress(host, port);
             datagramSocket = new DatagramSocket();
 //            datagramChannel.configureBlocking(false);
-            datagramSocket.setSoTimeout(2000);
+            datagramSocket.setSoTimeout(5000);
             
             if (datagramSocket != null) {
                 Outputer.println("Connected to server.");
@@ -135,6 +135,7 @@ public class Client {
             } catch (ClassNotFoundException exception) {
                 Outputer.printerror("An error occurred while reading received data!");
             } catch (IOException exception) {
+                exception.printStackTrace();
                 Outputer.printerror("Server connection lost!");
                 try {
                     reconnectionAttempts++;
@@ -213,6 +214,7 @@ public class Client {
             } catch (ClassNotFoundException exception) {
                 Outputer.printerror("An error occurred while reading received data!");
             } catch (IOException exception) {
+                exception.printStackTrace();
                 Outputer.printerror("Server connection lost!");
                 try {
                     connectToServer();

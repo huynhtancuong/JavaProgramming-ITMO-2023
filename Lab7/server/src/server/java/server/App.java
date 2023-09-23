@@ -57,7 +57,7 @@ public class App {
         );
 //        Console console = new Console(commandManager, new Scanner(System.in));
         HandleResquestTask handleResquestTask = new HandleResquestTask(commandManager);
-        Server server = new Server(port, CONNECTION_TIMEOUT, handleResquestTask);
+        Server server = new Server(port, CONNECTION_TIMEOUT, handleResquestTask, commandManager);
 //        console.start();
         server.run();
         databaseHandler.closeConnection();
