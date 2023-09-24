@@ -144,7 +144,8 @@ public class SpaceMarine implements Comparable<SpaceMarine>, Serializable {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (obj instanceof SpaceMarine marineObj) {
+        if (obj instanceof SpaceMarine) {
+            SpaceMarine marineObj = (SpaceMarine) obj;
             return name.equals(marineObj.getName()) && coordinates.equals(marineObj.getCoordinates()) &&
                    (health == marineObj.getHealth()) && (meleeWeapon == marineObj.getMeleeWeapon()) &&
                    chapter.equals(marineObj.getChapter());
