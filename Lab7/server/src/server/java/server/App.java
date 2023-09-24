@@ -20,7 +20,7 @@ public class App {
     // TODO: Add a where query to delete + 1 more condition so that the user is checked during change commands (you can change it in the database itself)
     private static final int MAX_CLIENTS = 1000;
     private static final int CONNECTION_TIMEOUT = 1000000000;
-    private static String databaseUsername = "s336231";
+    private static String databaseUsername = "s344410";
     private static int port;
     private static String databaseHost;
     private static String databasePassword;
@@ -73,7 +73,7 @@ public class App {
             if (port < 0) throw new NotInDeclaredLimitsException();
             databaseHost = args[1];
             databasePassword = args[2];
-            databaseAddress = "jdbc:postgresql://" + databaseHost + ":5432/studs_clone";
+            databaseAddress = "jdbc:postgresql://" + databaseHost + ":5432/studs";
             return true;
         } catch (WrongAmountOfElementsException exception) {
             String jarName = new java.io.File(App.class.getProtectionDomain()

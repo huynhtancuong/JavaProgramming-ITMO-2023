@@ -10,6 +10,8 @@ server_port := 25566
 server_entry := server.App
 client_entry := client.App
 manifest := MANIFEST.MF
+db_password := 8D8q7Srz7k8YylYO
+
 
 # _path_libs is a variable that store path to all jar file in folder lib
 # the separator between paths is SPACE
@@ -23,7 +25,9 @@ space := $(subst ,, )
 path_libs := $(subst $(space),:,$(_path_libs))
 
 sourceslist.%:
-	find . -name *.java > $(out_sourceslist)
+	find server -name *.java >> $(out_sourceslist)
+	find common -name *.java >> $(out_sourceslist)
+	find client -name *.java >> $(out_sourceslist)
 target: $(out_sourceslist)
 	mkdir -p target
 	javac -cp $(path_libs) -d target @$(out_sourceslist)
@@ -35,10 +39,8 @@ server: target
 	echo "Class-Path: target/ $(_path_libs)" >> $(manifest)
 	jar -cvfm $(out_server) $(manifest) target/common target/server $(_path_libs)
 
-run-server: $(out_server) 
-	$(env_var_name)=$(shell pwd)/$(env_var_value);\
-	export $(env_var_name)=$(shell pwd)/$(env_var_value);\
-	java -jar $(out_server)	25565 localhost ogq995
+run-server: $(out_server)
+	java -jar $(out_server)	$(server_port) $(server_ip) $(db_password)
 
 run-client: $(out_client) 
 	java -jar $(out_client)	$(server_ip) $(server_port)

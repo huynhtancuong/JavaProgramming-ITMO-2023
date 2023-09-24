@@ -91,7 +91,7 @@ public class Client {
             addr = new InetSocketAddress(host, port);
             datagramSocket = new DatagramSocket();
 //            datagramChannel.configureBlocking(false);
-            datagramSocket.setSoTimeout(5000);
+            datagramSocket.setSoTimeout(10000);
             
             if (datagramSocket != null) {
                 Outputer.println("Connected to server.");
