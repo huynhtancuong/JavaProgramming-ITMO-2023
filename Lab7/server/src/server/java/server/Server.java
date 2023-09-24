@@ -107,7 +107,7 @@ public class Server {
             App.logger.info("Server start...");
 
             datagramChannel = DatagramChannel.open();
-            datagramChannel.configureBlocking(false);
+            datagramChannel.configureBlocking(true);
 
             addr = new InetSocketAddress("localhost", port);
 
