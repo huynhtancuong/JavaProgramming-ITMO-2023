@@ -48,7 +48,7 @@ public class Chapter implements Serializable {
 
     @Override
     public String toString() {
-        return name + " (" + marinesCount + " солдат)";
+        return name + " (" + marinesCount + " soldier, " + "Parent legion: " + parentLegion + ", World: " + world + " )";
     }
 
     @Override

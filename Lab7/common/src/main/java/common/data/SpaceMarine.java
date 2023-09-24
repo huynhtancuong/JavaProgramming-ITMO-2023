@@ -107,11 +107,11 @@ public class SpaceMarine implements Comparable<SpaceMarine>, Serializable {
      */
     public boolean verifySpaceMarine(){
         if (health <= 0 ) return false;
-        if (name.equals("") || name.isEmpty() || name == null ) return false;
+        if (name.isEmpty() || name.isEmpty() || name == null ) return false;
         if (coordinates == null || coordinates.getY() >267) return false;
         if (creationDate == null ) return false;
         if (meleeWeapon == null ) return false;
-        if (chapter.getName().isEmpty() || chapter.getName().equals("") || chapter.getName() == null || chapter.getMarinesCount() < 0 || chapter.getMarinesCount()> 1001) return false;
+        if (chapter.getName().isEmpty() || chapter.getName().isEmpty() || chapter.getName() == null || chapter.getMarinesCount() < 0 || chapter.getMarinesCount()> 1001) return false;
 
         return true;
     }
@@ -125,7 +125,7 @@ public class SpaceMarine implements Comparable<SpaceMarine>, Serializable {
     public String toString() {
         String info = "";
         info += "Created number: " + id;
-        info += " (Added: " + owner.getUsername() + creationDate.toLocalDate() + " " + creationDate.toLocalTime() + ")";
+        info += " (Added: " + owner.getUsername() + " " + creationDate.toLocalDate() + " " + creationDate.toLocalTime() + ")";
         info += "\n Name: " + name;
         info += "\n Coordinate: " + coordinates;
         info += "\n Health: " + health;
@@ -144,8 +144,7 @@ public class SpaceMarine implements Comparable<SpaceMarine>, Serializable {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-        if (obj instanceof SpaceMarine) {
-            SpaceMarine marineObj = (SpaceMarine) obj;
+        if (obj instanceof SpaceMarine marineObj) {
             return name.equals(marineObj.getName()) && coordinates.equals(marineObj.getCoordinates()) &&
                    (health == marineObj.getHealth()) && (meleeWeapon == marineObj.getMeleeWeapon()) &&
                    chapter.equals(marineObj.getChapter());
